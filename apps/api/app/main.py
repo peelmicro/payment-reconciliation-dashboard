@@ -3,15 +3,25 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
 
+from app.common.base import Base
+from app.common.code_sequence import CodeSequence  # noqa: F401
+from app.currency.model import Currency  # noqa: F401
+from app.provider.model import Provider  # noqa: F401
+from app.merchant.model import Merchant  # noqa: F401
+from app.payment.model import Payment  # noqa: F401
+from app.stripe.model import StripePayment  # noqa: F401
+from app.paypal.model import PaypalPayment  # noqa: F401
+from app.bank.model import BankTransferPayment  # noqa: F401
+from app.reconciliation.model import Reconciliation  # noqa: F401
 from app.database import engine
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: test database connection
+    # Startup: create tables and test connection
     async with engine.begin() as conn:
-        await conn.execute(text("SELECT 1"))
-    print("Database connection OK")
+        await conn.run_sync(Base.metadata.create_all)
+    print("Database tables created")
     yield
     # Shutdown: close all connections
     await engine.dispose()
