@@ -1,0 +1,11 @@
+### Seed Currencies
+POST http://localhost:8000/seed/currencies
+Content-Type: application/json
+
+### Seed Providers
+POST http://localhost:8000/seed/providers
+Content-Type: application/json
+
+### Seed Merchants (requires currencies to be seeded first)
+POST http://localhost:8000/seed/merchants
+Content-Type: application/json

@@ -14,6 +14,7 @@ from app.paypal.model import PaypalPayment  # noqa: F401
 from app.bank.model import BankTransferPayment  # noqa: F401
 from app.reconciliation.model import Reconciliation  # noqa: F401
 from app.database import engine
+from app.seed.router import router as seed_router
 
 
 @asynccontextmanager
@@ -33,6 +34,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+app.include_router(seed_router)
 
 
 @app.get("/health")

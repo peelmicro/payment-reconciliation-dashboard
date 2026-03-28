@@ -1,0 +1,18 @@
+{
+  "name": "payment-reconciliation-dashboard",
+  "private": true,
+  "scripts": {
+    "api": "cd apps/api && .venv/bin/fastapi dev app/main.py",
+    "api:test": "cd apps/api && .venv/bin/python -m pytest",
+    "web": "cd apps/web && npm run dev",
+    "web:test": "cd apps/web && npx vitest --run",
+    "web:lint": "cd apps/web && npm run lint",
+    "dc:up": "docker compose up -d",
+    "dc:down": "docker compose down",
+    "dc:ps": "docker compose ps",
+    "dc:clean": "docker compose down -v",
+    "dc:logs:pg": "docker compose logs -f postgres",
+    "dc:logs:n8n": "docker compose logs -f n8n",
+    "dc:logs": "docker compose logs -f"
+  }
+}

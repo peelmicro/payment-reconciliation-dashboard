@@ -1,0 +1,87 @@
+{
+  "name": "WF1 - Seed Base Data",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/seed/currencies",
+        "options": {}
+      },
+      "id": "node-1",
+      "name": "Seed Currencies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/seed/providers",
+        "options": {}
+      },
+      "id": "node-2",
+      "name": "Seed Providers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/seed/merchants",
+        "options": {}
+      },
+      "id": "node-3",
+      "name": "Seed Merchants",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Seed Currencies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Currencies": {
+      "main": [
+        [
+          {
+            "node": "Seed Providers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seed Providers": {
+      "main": [
+        [
+          {
+            "node": "Seed Merchants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
