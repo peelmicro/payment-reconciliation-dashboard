@@ -1,0 +1,35 @@
+### List all payments (default: 20 most recent)
+GET http://localhost:8000/payments
+
+### List payments filtered by status
+GET http://localhost:8000/payments?status=succeeded
+
+### List payments filtered by payment method
+GET http://localhost:8000/payments?payment_method=card
+
+### List payments filtered by merchant
+GET http://localhost:8000/payments?merchant_code=TIENDA_SOL
+
+### List payments filtered by provider
+GET http://localhost:8000/payments?provider_code=STRIPE
+
+### List payments filtered by currency
+GET http://localhost:8000/payments?currency_code=EUR
+
+### List payments with multiple filters
+GET http://localhost:8000/payments?status=succeeded&payment_method=card&limit=5
+
+### List payments with pagination (page 2)
+GET http://localhost:8000/payments?limit=10&offset=10
+
+### Generate 5 fake payments (default)
+POST http://localhost:8000/payments/generate
+Content-Type: application/json
+
+### Generate 10 fake payments
+POST http://localhost:8000/payments/generate?count=10
+Content-Type: application/json
+
+### Generate 1 fake payment
+POST http://localhost:8000/payments/generate?count=1
+Content-Type: application/json
