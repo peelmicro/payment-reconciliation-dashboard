@@ -1,0 +1,24 @@
+### List all PayPal payments (default: 20 most recent)
+GET http://localhost:8000/paypal-payments
+
+### List PayPal payments filtered by status
+GET http://localhost:8000/paypal-payments?status=COMPLETED
+
+### List PayPal payments filtered by payment type
+GET http://localhost:8000/paypal-payments?payment_type=capture
+
+### List PayPal payments filtered by currency
+GET http://localhost:8000/paypal-payments?currency=EUR
+
+### List PayPal payments filtered by card brand
+GET http://localhost:8000/paypal-payments?card_brand=visa
+
+### List PayPal payments with multiple filters
+GET http://localhost:8000/paypal-payments?status=COMPLETED&currency=EUR&limit=5
+
+### List PayPal payments with pagination (page 2)
+GET http://localhost:8000/paypal-payments?limit=10&offset=10
+
+### Simulate PayPal payments (from recent internal payments)
+POST http://localhost:8000/paypal-payments/simulate
+Content-Type: application/json

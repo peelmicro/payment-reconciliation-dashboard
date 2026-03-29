@@ -71,6 +71,7 @@ async def list_payments(
                 "card_bin": p.card_bin,
                 "card_last_four": p.card_last_four,
                 "card_masked": p.card_masked,
+                "card_brand": p.card_brand,
                 "iban_country": p.iban_country,
                 "iban_bank": p.iban_bank,
                 "iban_branch": p.iban_branch,

@@ -38,6 +38,7 @@ class Payment(Base):
     card_bin: Mapped[str | None] = mapped_column(String(6), nullable=True)
     card_last_four: Mapped[str | None] = mapped_column(String(4), nullable=True)
     card_masked: Mapped[str | None] = mapped_column(String(19), nullable=True)
+    card_brand: Mapped[str | None] = mapped_column(String(20), nullable=True)
     # IBAN fields (used when payment_method is bank_transfer or direct_debit)
     iban_country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     iban_bank: Mapped[str | None] = mapped_column(String(4), nullable=True)

@@ -1,0 +1,24 @@
+### List all Stripe payments (default: 20 most recent)
+GET http://localhost:8000/stripe-payments
+
+### List Stripe payments filtered by status
+GET http://localhost:8000/stripe-payments?status=succeeded
+
+### List Stripe payments filtered by payment type
+GET http://localhost:8000/stripe-payments?payment_type=payment_intent
+
+### List Stripe payments filtered by currency
+GET http://localhost:8000/stripe-payments?currency=EUR
+
+### List Stripe payments filtered by card brand
+GET http://localhost:8000/stripe-payments?card_brand=visa
+
+### List Stripe payments with multiple filters
+GET http://localhost:8000/stripe-payments?status=succeeded&currency=EUR&limit=5
+
+### List Stripe payments with pagination (page 2)
+GET http://localhost:8000/stripe-payments?limit=10&offset=10
+
+### Simulate Stripe payments (from recent internal payments)
+POST http://localhost:8000/stripe-payments/simulate
+Content-Type: application/json

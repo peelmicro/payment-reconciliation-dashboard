@@ -12,6 +12,9 @@ class StripePayment(Base):
     __tablename__ = "stripe_payments"
 
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    payment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("payments.id"), nullable=True, unique=True, index=True
+    )
     provider_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("providers.id"), nullable=False
     )

@@ -80,6 +80,10 @@ Each domain entity follows the pattern: `entity/` with model, service, router mo
 - PostgreSQL on port 5432, n8n on port 5678
 - n8n workflows exported as JSON in `n8n/workflows/`
 
+## Collaboration Rules
+
+- **Do not start coding when the user asks a question.** When the user asks "what do you think?" or discusses an approach, reply with your analysis and wait for confirmation before making any changes. Only start developing when explicitly asked to proceed.
+
 ## Key Design Decisions
 
 - **Scoring-based reconciliation** over exact key matching — real-world payments rarely have perfect matching keys

@@ -84,11 +84,14 @@ async def generate_fake_payments(
         fake = get_faker(merchant.country)
 
         # Generate card or IBAN fields based on payment method
-        card_bin = card_last_four = card_masked = None
+        card_bin = card_last_four = card_masked = card_brand = None
         iban_country = iban_bank = iban_branch = iban_last_four = iban_masked = None
 
         if payment_method in (PaymentMethod.card, PaymentMethod.paypal_wallet):
-            card_number = fake.credit_card_number()
+            # 1. Pick a random card brand
+            card_brand = random.choice(["visa", "mastercard", "amex"])
+            # 2. Generate a card number of that brand (consistent BIN + brand)
+            card_number = fake.credit_card_number(card_type=card_brand)
             card_bin = card_number[:6]
             card_last_four = card_number[-4:]
             card_masked = f"{card_bin}******{card_last_four}"
@@ -102,10 +105,8 @@ async def generate_fake_payments(
             hidden_len = len(iban) - 12 - 4
             iban_masked = f"{iban[:12]}{'*' * hidden_len}{iban_last_four}"
 
-        # Processed at: random time in the last 7 days
-        processed_at = datetime.now(timezone.utc) - timedelta(
-            hours=random.randint(1, 168)
-        )
+        # Processed at: current time (when the payment is created)
+        processed_at = datetime.now(timezone.utc)
 
         code = await generate_code(session, "PAY")
 
@@ -126,6 +127,7 @@ async def generate_fake_payments(
             card_bin=card_bin,
             card_last_four=card_last_four,
             card_masked=card_masked,
+            card_brand=card_brand,
             iban_country=iban_country,
             iban_bank=iban_bank,
             iban_branch=iban_branch,

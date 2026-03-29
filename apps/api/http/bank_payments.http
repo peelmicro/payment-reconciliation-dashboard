@@ -1,0 +1,27 @@
+### List all bank transfer payments (default: 20 most recent)
+GET http://localhost:8000/bank-payments
+
+### List bank payments filtered by status
+GET http://localhost:8000/bank-payments?status=EXECUTED
+
+### List bank payments filtered by transfer type
+GET http://localhost:8000/bank-payments?payment_type=sepa_credit
+
+### List bank payments filtered by currency
+GET http://localhost:8000/bank-payments?currency=EUR
+
+### List bank payments filtered by IBAN country
+GET http://localhost:8000/bank-payments?iban_country=ES
+
+### List bank payments filtered by VAT number
+GET http://localhost:8000/bank-payments?vat_number=B12345678
+
+### List bank payments with multiple filters
+GET http://localhost:8000/bank-payments?status=EXECUTED&currency=EUR&limit=5
+
+### List bank payments with pagination (page 2)
+GET http://localhost:8000/bank-payments?limit=10&offset=10
+
+### Simulate bank transfer payments (from recent internal payments)
+POST http://localhost:8000/bank-payments/simulate
+Content-Type: application/json
