@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import pandas as pd
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -159,6 +160,98 @@ async def reconciliation_summary(
             "bank": providers.bank,
         },
     }
+
+
+@router.get("/trends")
+async def reconciliation_trends(
+    days: int = Query(default=30, ge=1, le=365),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Daily reconciliation trends using Pandas.
+    Returns daily match rate, volume, discrepancy amount, and confidence.
+    """
+
+    # Load reconciliation data
+    result = await session.execute(
+        select(
+            Reconciliation.status,
+            Reconciliation.internal_amount,
+            Reconciliation.external_amount,
+            Reconciliation.delta,
+            Reconciliation.confidence,
+            Reconciliation.reconciled_at,
+            Reconciliation.stripe_payment_id,
+            Reconciliation.paypal_payment_id,
+            Reconciliation.bank_transfer_id,
+        )
+    )
+    rows = result.all()
+
+    if not rows:
+        return {"days": days, "trends": []}
+
+    # Create a Pandas DataFrame from the query results
+    df = pd.DataFrame(rows, columns=[
+        "status", "internal_amount", "external_amount",
+        "delta", "confidence", "reconciled_at",
+        "stripe_payment_id", "paypal_payment_id", "bank_transfer_id",
+    ])
+
+    # Convert reconciled_at to date for grouping
+    df["date"] = pd.to_datetime(df["reconciled_at"]).dt.date
+
+    # Filter to requested date range
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).date()
+    df = df[df["date"] >= cutoff]
+
+    if df.empty:
+        return {"days": days, "trends": []}
+
+    # Group by date and calculate daily stats
+    daily = df.groupby("date").agg(
+        total=("status", "count"),
+        matched=("status", lambda x: (x.isin(["matched", "matched_with_fee"])).sum()),
+        amount_mismatch=("status", lambda x: (x == "amount_mismatch").sum()),
+        missing_internal=("status", lambda x: (x == "missing_internal").sum()),
+        total_internal=("internal_amount", "sum"),
+        total_external=("external_amount", "sum"),
+        total_discrepancy=("delta", lambda x: x.abs().sum()),
+        avg_confidence=("confidence", "mean"),
+        stripe_count=("stripe_payment_id", "count"),
+        paypal_count=("paypal_payment_id", "count"),
+        bank_count=("bank_transfer_id", "count"),
+    ).reset_index()
+
+    # Calculate match rate percentage
+    daily["match_rate"] = round(daily["matched"] / daily["total"] * 100, 1)
+
+    # Sort by date ascending
+    daily = daily.sort_values("date")
+
+    # Convert to list of dicts for JSON response
+    trends = [
+        {
+            "date": row["date"].isoformat(),
+            "total": int(row["total"]),
+            "matched": int(row["matched"]),
+            "amount_mismatch": int(row["amount_mismatch"]),
+            "missing_internal": int(row["missing_internal"]),
+            "match_rate": float(row["match_rate"]),
+            "total_internal": int(row["total_internal"]),
+            "total_external": int(row["total_external"]),
+            "total_discrepancy": int(row["total_discrepancy"]),
+            "avg_confidence": round(float(row["avg_confidence"]), 1),
+            "by_provider": {
+                "stripe": int(row["stripe_count"]),
+                "paypal": int(row["paypal_count"]),
+                "bank": int(row["bank_count"]),
+            },
+        }
+        for _, row in daily.iterrows()
+    ]
+
+    return {"days": days, "trends": trends}
 
 
 @router.get("/missing-external")

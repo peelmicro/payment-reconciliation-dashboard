@@ -1,6 +1,15 @@
 ### Dashboard summary (KPIs, match rates, confidence stats)
 GET http://localhost:8000/reconciliations/summary
 
+### Trends: daily reconciliation stats (last 30 days, default)
+GET http://localhost:8000/reconciliations/trends
+
+### Trends: daily reconciliation stats (last 7 days)
+GET http://localhost:8000/reconciliations/trends?days=7
+
+### Trends: daily reconciliation stats (last 90 days)
+GET http://localhost:8000/reconciliations/trends?days=90
+
 ### List missing external payments (internal payments with no provider match)
 GET http://localhost:8000/reconciliations/missing-external
 
