@@ -1,3 +1,15 @@
+### Dashboard summary (KPIs, match rates, confidence stats)
+GET http://localhost:8000/reconciliations/summary
+
+### List missing external payments (internal payments with no provider match)
+GET http://localhost:8000/reconciliations/missing-external
+
+### List missing external with pagination
+GET http://localhost:8000/reconciliations/missing-external?limit=10&offset=0
+
+### Get single reconciliation by ID (replace with actual UUID)
+GET http://localhost:8000/reconciliations/00000000-0000-0000-0000-000000000000
+
 ### List all reconciliations (default: 20 most recent)
 GET http://localhost:8000/reconciliations
 

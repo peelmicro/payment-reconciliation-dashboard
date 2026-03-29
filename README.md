@@ -43,3 +43,28 @@ The reconciliation engine uses a **confidence percentage** scoring system to mat
 **Confidence** = `(score / max_possible_score) * 100`. The `max_possible_score` is calculated dynamically based on which fields are non-null in both records. Threshold: **65%**.
 
 Example: A PayPal wallet payment (no card/IBAN data) has max 180 points (100 + 50 + 30). A score of 180/180 = 100% confidence — just as strong as a Stripe card match at 230/230 = 100%.
+
+## n8n Workflows
+
+All workflows are exported as JSON files in `n8n/workflows/` and can be imported into any n8n instance.
+
+| Workflow | File | Trigger | What it does |
+|----------|------|---------|-------------|
+| WF1 | `WF1_seed_base_data.json` | Manual | Seeds currencies, providers, merchants (in sequence) |
+| WF2 | `WF2_generate_fake_payments.json` | Every 5 min | Generates 5 fake internal payments |
+| WF3 | `WF3_simulate_stripe.json` | Every 10 min | Simulates Stripe records from recent card payments |
+| WF4 | `WF4_simulate_paypal.json` | Every 30 min | Simulates PayPal records from recent card/wallet payments |
+| WF5 | `WF5_simulate_bank.json` | Every 1 hour | Simulates bank transfer records from recent bank payments |
+| WF6 | `WF6_run_reconciliation.json` | Every 15 min | Runs the reconciliation engine |
+
+### How to import workflows
+
+1. Start the stack: `docker compose up -d` (or `npm run dc:up`)
+2. Open n8n at http://localhost:5678
+3. Click **"+"** → **"Workflow"** to create a new workflow
+4. Click the **three dots menu (...)** at the top right → **"Import from file"**
+5. Select a JSON file from `n8n/workflows/`
+6. Click **"Execute workflow"** to test manually
+7. Toggle **"Publish"** to activate the cron schedule
+
+**Note:** The API server must be running (`npm run api`) for workflows to work. Workflows use `http://host.docker.internal:8000` to reach the API from inside Docker.
