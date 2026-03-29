@@ -8,7 +8,7 @@ GET http://localhost:8000/reconciliations/missing-external
 GET http://localhost:8000/reconciliations/missing-external?limit=10&offset=0
 
 ### Get single reconciliation by ID (replace with actual UUID)
-GET http://localhost:8000/reconciliations/00000000-0000-0000-0000-000000000000
+GET http://localhost:8000/reconciliations/627686a6-502a-4aca-9e86-e21c8b106ca0
 
 ### List all reconciliations (default: 20 most recent)
 GET http://localhost:8000/reconciliations

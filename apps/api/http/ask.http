@@ -1,0 +1,63 @@
+### Ask in English: How many reconciliations are matched?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "How many reconciliations are matched?"
+}
+
+### Ask in English: What is the match rate?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "What is the match rate percentage?"
+}
+
+### Ask in English: What is the total discrepancy amount?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "What is the total discrepancy amount across all reconciliations?"
+}
+
+### Ask in English: Show me the top 5 largest amount mismatches
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "Show me the top 5 reconciliations with the largest amount mismatch, including the internal and external amounts"
+}
+
+### Ask in Spanish: ¿Cuántas transacciones hay por proveedor?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "¿Cuántas transacciones hay por cada proveedor (Stripe, PayPal, Bankinter)?"
+}
+
+### Ask in Spanish: ¿Cuál es la tasa de coincidencia?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "¿Cuál es la tasa de coincidencia de las reconciliaciones?"
+}
+
+### Ask in Spanish: ¿Cuáles son los comerciantes con más discrepancias?
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "¿Qué comerciantes tienen más discrepancias en los pagos?"
+}
+
+### Ask in Spanish: Resumen general del dashboard
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+    "question": "Dame un resumen general del estado de las reconciliaciones: cuántas coinciden, cuántas no coinciden, y cuál es el monto total de discrepancias en euros"
+}

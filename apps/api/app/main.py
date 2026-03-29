@@ -14,6 +14,7 @@ from app.paypal.model import PaypalPayment  # noqa: F401
 from app.bank.model import BankTransferPayment  # noqa: F401
 from app.reconciliation.model import Reconciliation  # noqa: F401
 from app.database import engine
+from app.ask.router import router as ask_router
 from app.bank.router import router as bank_router
 from app.payment.router import router as payment_router
 from app.paypal.router import router as paypal_router
@@ -47,6 +48,7 @@ app.include_router(stripe_router)
 app.include_router(paypal_router)
 app.include_router(bank_router)
 app.include_router(reconciliation_router)
+app.include_router(ask_router)
 
 
 @app.get("/health")
