@@ -110,6 +110,7 @@ async def simulate_paypal_payments(session: AsyncSession) -> list[dict]:
             card_masked=payment.card_masked,
             card_brand=payment.card_brand,
             country=merchant.country,
+            vat_number=merchant.vat_number,
             paypal_created_at=paypal_created,
         )
         session.add(paypal_payment)

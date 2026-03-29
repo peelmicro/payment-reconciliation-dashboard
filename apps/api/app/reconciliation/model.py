@@ -33,6 +33,9 @@ class Reconciliation(Base):
     currency_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("currencies.id"), nullable=False
     )
+    score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    confidence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     reconciled_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

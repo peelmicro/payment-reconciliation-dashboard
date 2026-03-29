@@ -64,6 +64,7 @@ async def list_stripe_payments(
                 "card_brand": p.card_brand,
                 "card_funding": p.card_funding,
                 "country": p.country,
+                "vat_number": p.vat_number,
                 "stripe_created_at": p.stripe_created_at.isoformat(),
                 "created_at": p.created_at.isoformat(),
                 "updated_at": p.updated_at.isoformat(),

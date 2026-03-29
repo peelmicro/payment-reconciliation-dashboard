@@ -63,6 +63,7 @@ async def list_paypal_payments(
                 "card_masked": p.card_masked,
                 "card_brand": p.card_brand,
                 "country": p.country,
+                "vat_number": p.vat_number,
                 "paypal_created_at": p.paypal_created_at.isoformat(),
                 "created_at": p.created_at.isoformat(),
                 "updated_at": p.updated_at.isoformat(),

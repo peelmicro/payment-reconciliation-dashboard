@@ -17,6 +17,7 @@ from app.database import engine
 from app.bank.router import router as bank_router
 from app.payment.router import router as payment_router
 from app.paypal.router import router as paypal_router
+from app.reconciliation.router import router as reconciliation_router
 from app.seed.router import router as seed_router
 from app.stripe.router import router as stripe_router
 
@@ -45,6 +46,7 @@ app.include_router(payment_router)
 app.include_router(stripe_router)
 app.include_router(paypal_router)
 app.include_router(bank_router)
+app.include_router(reconciliation_router)
 
 
 @app.get("/health")

@@ -1,0 +1,27 @@
+### List all reconciliations (default: 20 most recent)
+GET http://localhost:8000/reconciliations
+
+### List reconciliations filtered by status - matched
+GET http://localhost:8000/reconciliations?status=matched
+
+### List reconciliations filtered by status - matched_with_fee
+GET http://localhost:8000/reconciliations?status=matched_with_fee
+
+### List reconciliations filtered by status - amount_mismatch
+GET http://localhost:8000/reconciliations?status=amount_mismatch
+
+### List reconciliations filtered by status - missing_internal
+GET http://localhost:8000/reconciliations?status=missing_internal
+
+### List reconciliations filtered by status - missing_external
+GET http://localhost:8000/reconciliations?status=missing_external
+
+### List reconciliations filtered by status - duplicate
+GET http://localhost:8000/reconciliations?status=duplicate
+
+### List reconciliations with pagination (page 2)
+GET http://localhost:8000/reconciliations?limit=10&offset=10
+
+### Run reconciliation engine
+POST http://localhost:8000/reconciliations/run
+Content-Type: application/json

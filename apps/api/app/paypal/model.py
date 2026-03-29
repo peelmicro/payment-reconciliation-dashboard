@@ -39,6 +39,7 @@ class PaypalPayment(Base):
     card_masked: Mapped[str | None] = mapped_column(String(19), nullable=True)
     card_brand: Mapped[str | None] = mapped_column(String(20), nullable=True)
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    vat_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
     paypal_created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

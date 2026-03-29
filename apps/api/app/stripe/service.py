@@ -9,6 +9,7 @@ from sqlalchemy.orm import aliased
 from app.common.code_generator import generate_code
 from app.common.enums import PaymentMethod, PaymentStatus, StripePaymentType
 from app.currency.model import Currency
+from app.merchant.model import Merchant
 from app.payment.model import Payment
 from app.provider.model import Provider
 from app.stripe.model import StripePayment
@@ -57,13 +58,16 @@ async def simulate_stripe_payments(session: AsyncSession) -> list[dict]:
     )
     payments = payments_result.scalars().all()
 
-    # Build currency lookup
+    # Build lookups
     currencies = (await session.execute(select(Currency))).scalars().all()
     currency_map = {c.id: c for c in currencies}
+    merchants = (await session.execute(select(Merchant))).scalars().all()
+    merchant_map = {m.id: m for m in merchants}
 
     created = []
     for payment in payments:
         currency = currency_map[payment.currency_id]
+        merchant = merchant_map[payment.merchant_id]
 
         # Apply Stripe fee: 2.9% + 30 cents
         stripe_fee = int(payment.amount * 0.029) + 30
@@ -106,6 +110,7 @@ async def simulate_stripe_payments(session: AsyncSession) -> list[dict]:
             card_brand=payment.card_brand or "visa",
             card_funding=random.choice(["credit", "debit", "prepaid"]),
             country=currency.code[:2] if len(currency.code) >= 2 else None,
+            vat_number=merchant.vat_number,
             stripe_created_at=stripe_created,
         )
         session.add(stripe_payment)

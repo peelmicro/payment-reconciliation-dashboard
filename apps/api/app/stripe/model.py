@@ -40,6 +40,7 @@ class StripePayment(Base):
     card_brand: Mapped[str | None] = mapped_column(String(20), nullable=True)
     card_funding: Mapped[str | None] = mapped_column(String(10), nullable=True)
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    vat_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
     stripe_created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
