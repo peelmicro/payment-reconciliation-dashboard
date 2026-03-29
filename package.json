@@ -4,6 +4,8 @@
   "scripts": {
     "api": "cd apps/api && .venv/bin/fastapi dev app/main.py",
     "api:test": "cd apps/api && .venv/bin/python -m pytest",
+    "api:lint": "cd apps/api && .venv/bin/ruff check app/",
+    "api:lint:fix": "cd apps/api && .venv/bin/ruff check app/ --fix",
     "web": "cd apps/web && npm run dev",
     "web:test": "cd apps/web && npx vitest --run",
     "web:lint": "cd apps/web && npm run lint",

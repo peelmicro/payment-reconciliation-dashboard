@@ -214,7 +214,7 @@ async def run_reconciliation(session: AsyncSession) -> dict:
                 confidence=best_result.confidence if best_result else 0,
                 reconciled_at=now,
                 reconciled_by="system",
-                notes=f"Multiple matches found ({len(matches_above_threshold)} candidates above threshold)",
+                notes=f"Multiple matches found ({len(matches_above_threshold)} candidates)",
             )
             session.add(recon)
             results["duplicate"] += 1
@@ -243,7 +243,7 @@ async def run_reconciliation(session: AsyncSession) -> dict:
                 confidence=best_result.confidence,
                 reconciled_at=now,
                 reconciled_by="system",
-                notes=f"Score: {best_result.score}/{best_result.max_score} ({best_result.confidence}%)",
+                notes=f"Score: {best_result.score}/{best_result.max_score} ({best_result.confidence}%)",  # noqa: E501
             )
             session.add(recon)
             matched_payment_ids.add(matched_payment.payment_id)

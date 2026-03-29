@@ -23,9 +23,11 @@ You have access to a PostgreSQL database with the following business context:
 - **payments**: Internal payment records (source of truth). Amounts are in cents.
 - **stripe_payments**: External records from Stripe. Have payment_id linking to payments.
 - **paypal_payments**: External records from PayPal. Have payment_id linking to payments.
-- **bank_transfer_payments**: External records from bank transfers. Have payment_id linking to payments.
+- **bank_transfer_payments**: External records from bank transfers.
+  Have payment_id linking to payments.
 - **reconciliations**: Results of matching internal payments with provider records.
-  Status values: matched, matched_with_fee, amount_mismatch, missing_internal, missing_external, duplicate, disputed.
+  Status values: matched, matched_with_fee, amount_mismatch,
+  missing_internal, missing_external, duplicate, disputed.
   Has score, max_score, confidence (percentage) fields.
 - **currencies**: USD, EUR, GBP with iso codes and symbols.
 - **providers**: STRIPE, PAYPAL, BANKINTER.
@@ -67,7 +69,7 @@ async def ask_question(question: str) -> dict:
         return {
             "question": question,
             "answer": None,
-            "error": "ANTHROPIC_API_KEY not configured. Set it in .env to enable natural language queries.",
+            "error": "ANTHROPIC_API_KEY not configured. Set it in .env to enable natural language queries.",  # noqa: E501
         }
 
     db, llm = result
@@ -112,7 +114,7 @@ async def ask_question(question: str) -> dict:
     # Step 3: Generate a natural language answer from the results
     answer_prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
-        ("human", "Question: {question}\n\nSQL Query executed:\n{sql}\n\nQuery results:\n{results}\n\n"
+        ("human", "Question: {question}\n\nSQL Query executed:\n{sql}\n\nQuery results:\n{results}\n\n"  # noqa: E501
          "Please provide a clear, concise answer to the question based on these results. "
          "Remember to convert cents to currency format (divide by 100)."),
     ])

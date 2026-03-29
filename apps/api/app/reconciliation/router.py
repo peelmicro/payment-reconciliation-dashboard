@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums import ReconciliationStatus
@@ -55,8 +55,10 @@ async def list_reconciliations(
                 "external_amount": r.external_amount,
                 "delta": r.delta,
                 "currency_id": str(r.currency_id),
-                "currency_code": currency_map[str(r.currency_id)].code if str(r.currency_id) in currency_map else "USD",
-                "currency_symbol": currency_map[str(r.currency_id)].symbol if str(r.currency_id) in currency_map else "$",
+                "currency_code": currency_map[str(r.currency_id)].code
+                    if str(r.currency_id) in currency_map else "USD",
+                "currency_symbol": currency_map[str(r.currency_id)].symbol
+                    if str(r.currency_id) in currency_map else "$",
                 "score": r.score,
                 "max_score": r.max_score,
                 "confidence": r.confidence,
@@ -157,7 +159,8 @@ async def reconciliation_summary(
             "total_discrepancy": amounts.total_discrepancy or 0,
         },
         "confidence": {
-            "average": round(float(confidence.avg_confidence), 1) if confidence.avg_confidence else 0,
+            "average": round(float(confidence.avg_confidence), 1)
+                if confidence.avg_confidence else 0,
             "min": confidence.min_confidence or 0,
             "max": confidence.max_confidence or 0,
         },

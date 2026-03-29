@@ -5,7 +5,6 @@ from app.currency.model import Currency
 from app.merchant.model import Merchant
 from app.provider.model import Provider
 
-
 CURRENCIES_DATA = [
     {"code": "USD", "iso_number": "840", "symbol": "$", "decimal_points": 2},
     {"code": "EUR", "iso_number": "978", "symbol": "€", "decimal_points": 2},

@@ -1,0 +1,15 @@
+line-length = 100
+
+[lint]
+# E — pycodestyle errors
+# F — pyflakes (undefined names, unused imports)
+# I — isort (import ordering)
+select = ["E", "F", "I"]
+
+# F401: imported but unused — we use `# noqa: F401` in main.py for SQLAlchemy model
+# registration side-effects, so suppress at file level there rather than globally
+ignore = []
+
+[lint.per-file-ignores]
+# Test files: allow accessing private functions (e.g. _determine_status)
+"tests/*" = ["F401"]

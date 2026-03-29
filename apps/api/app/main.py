@@ -2,25 +2,24 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 
+from app.ask.router import router as ask_router
+from app.bank.model import BankTransferPayment  # noqa: F401
+from app.bank.router import router as bank_router
 from app.common.base import Base
 from app.common.code_sequence import CodeSequence  # noqa: F401
 from app.currency.model import Currency  # noqa: F401
-from app.provider.model import Provider  # noqa: F401
+from app.database import engine
 from app.merchant.model import Merchant  # noqa: F401
 from app.payment.model import Payment  # noqa: F401
-from app.stripe.model import StripePayment  # noqa: F401
-from app.paypal.model import PaypalPayment  # noqa: F401
-from app.bank.model import BankTransferPayment  # noqa: F401
-from app.reconciliation.model import Reconciliation  # noqa: F401
-from app.database import engine
-from app.ask.router import router as ask_router
-from app.bank.router import router as bank_router
 from app.payment.router import router as payment_router
+from app.paypal.model import PaypalPayment  # noqa: F401
 from app.paypal.router import router as paypal_router
+from app.provider.model import Provider  # noqa: F401
+from app.reconciliation.model import Reconciliation  # noqa: F401
 from app.reconciliation.router import router as reconciliation_router
 from app.seed.router import router as seed_router
+from app.stripe.model import StripePayment  # noqa: F401
 from app.stripe.router import router as stripe_router
 
 
@@ -42,7 +41,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-from app.config import settings as app_settings
+from app.config import settings as app_settings  # noqa: E402
 
 app.add_middleware(
     CORSMiddleware,
