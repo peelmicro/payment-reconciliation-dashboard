@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     anthropic_api_key: str | None = None
+    cors_origins: str = "http://localhost:5173"
 
     @property
     def database_url(self) -> str:

@@ -43,6 +43,10 @@ async def list_payments(
     count_query = select(func.count()).select_from(query.subquery())
     total = (await session.execute(count_query)).scalar()
 
+    # Build currency lookup
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    currency_map = {c.id: c for c in currencies}
+
     # Apply pagination and ordering
     query = query.order_by(Payment.created_at.desc()).offset(offset).limit(limit)
     result = await session.execute(query)
@@ -64,6 +68,8 @@ async def list_payments(
                 "fee": p.fee,
                 "net": p.net,
                 "currency_id": str(p.currency_id),
+                "currency_code": currency_map[p.currency_id].code,
+                "currency_symbol": currency_map[p.currency_id].symbol,
                 "customer_id": p.customer_id,
                 "customer_name": p.customer_name,
                 "customer_email": p.customer_email,

@@ -6,6 +6,7 @@ from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums import ReconciliationStatus
+from app.currency.model import Currency
 from app.database import get_session
 from app.payment.model import Payment
 from app.reconciliation.model import Reconciliation
@@ -29,6 +30,10 @@ async def list_reconciliations(
     count_query = select(func.count()).select_from(query.subquery())
     total = (await session.execute(count_query)).scalar()
 
+    # Build currency lookup
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    currency_map = {str(c.id): c for c in currencies}
+
     query = query.order_by(Reconciliation.created_at.desc()).offset(offset).limit(limit)
     result = await session.execute(query)
     reconciliations = result.scalars().all()
@@ -50,6 +55,8 @@ async def list_reconciliations(
                 "external_amount": r.external_amount,
                 "delta": r.delta,
                 "currency_id": str(r.currency_id),
+                "currency_code": currency_map[str(r.currency_id)].code if str(r.currency_id) in currency_map else "USD",
+                "currency_symbol": currency_map[str(r.currency_id)].symbol if str(r.currency_id) in currency_map else "$",
                 "score": r.score,
                 "max_score": r.max_score,
                 "confidence": r.confidence,
@@ -325,6 +332,11 @@ async def get_reconciliation(
     if r is None:
         return {"error": "Reconciliation not found"}
 
+    # Get currency
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    currency_map = {str(c.id): c for c in currencies}
+    currency = currency_map.get(str(r.currency_id))
+
     return {
         "id": str(r.id),
         "code": r.code,
@@ -337,6 +349,8 @@ async def get_reconciliation(
         "external_amount": r.external_amount,
         "delta": r.delta,
         "currency_id": str(r.currency_id),
+        "currency_code": currency.code if currency else "USD",
+        "currency_symbol": currency.symbol if currency else "$",
         "score": r.score,
         "max_score": r.max_score,
         "confidence": r.confidence,
