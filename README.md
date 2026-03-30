@@ -30,9 +30,15 @@ Built as a portfolio project demonstrating real-world fintech patterns: async Py
 
 ## How to Run
 
+```bash
+git clone https://github.com/peelmicro/payment-reconciliation-dashboard.git
+cd payment-reconciliation-dashboard
+```
+
 ### Option 1 — Docker Compose (full stack)
 
 ```bash
+cp apps/api/.env.example apps/api/.env   # Add your ANTHROPIC_API_KEY (required for Ask AI feature)
 docker compose up -d
 ```
 
@@ -47,7 +53,7 @@ This starts:
 **Prerequisites:** Python 3.12+, Node.js 20+, PostgreSQL 16 running locally.
 
 ```bash
-# 1. Start PostgreSQL (Docker only)
+# 1. Start PostgreSQL and n8n (Docker)
 docker compose up -d postgres n8n
 
 # 2. Backend
@@ -55,7 +61,7 @@ cd apps/api
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env             # Edit DATABASE_URL and ANTHROPIC_API_KEY
+cp .env.example .env             # Edit DATABASE_URL and add ANTHROPIC_API_KEY
 fastapi dev app/main.py          # http://localhost:8000
 
 # 3. Frontend (new terminal)
@@ -130,7 +136,7 @@ All workflows are exported as JSON files in `n8n/workflows/` and can be imported
 
 | Workflow | File | Trigger | What it does |
 |----------|------|---------|-------------|
-| WF1 | `WF1_seed_base_data.json` | Manual | Seeds currencies, providers, merchants (in sequence) |
+| WF1 | `WF1_seed_base_data.json` | Manual | Seeds 3 currencies (USD, EUR, GBP), 3 providers (Stripe, PayPal, Bankinter), and 3 merchants (2 Spain, 1 UK) |
 | WF2 | `WF2_generate_fake_payments.json` | Every 5 min | Generates 5 fake internal payments |
 | WF3 | `WF3_simulate_stripe.json` | Every 10 min | Simulates Stripe records from recent card payments |
 | WF4 | `WF4_simulate_paypal.json` | Every 30 min | Simulates PayPal records from recent card/wallet payments |
@@ -289,7 +295,7 @@ These were considered but intentionally deferred to keep scope appropriate for t
 |----------|-------------|
 | Mixed-currency dashboard totals | Requires exchange rate data; adds significant complexity for limited demo value |
 | Real provider webhooks (Stripe, PayPal) | Needs live credentials and a public endpoint; n8n simulation is equivalent for the demo |
-| Alembic database migrations | `create_all` is acceptable for a seed-based demo; Alembic would be required in production |
+| Alembic database migrations | Alembic is a Python migration tool for SQLAlchemy that tracks schema changes incrementally (like versioned SQL scripts). `create_all` is acceptable for a seed-based demo; Alembic would be required in production to safely evolve the schema without losing data |
 | Per-merchant reconciliation rules | Different merchants may need different scoring thresholds; not required for the demo dataset |
 | n8n workflow pagination | Provider simulation workflows fetch all records; real workflows would need cursor-based pagination |
 | Real BIN database lookup | Card BIN matching uses stored values; a production system would validate against a live BIN database |
@@ -298,7 +304,7 @@ These were considered but intentionally deferred to keep scope appropriate for t
 
 ## What I Would Do Differently
 
-1. **Alembic for migrations** — `create_all` on startup is convenient for demos but unsafe in production where existing data must be preserved across schema changes.
+1. **Alembic for migrations** — Alembic generates incremental migration scripts (e.g., "add column X to table Y") that can be applied and rolled back safely. Currently, `create_all` on startup drops and recreates everything, which is fine for a demo but would destroy production data on schema changes.
 2. **Event-driven reconciliation** — instead of polling every 15 minutes (WF6), trigger reconciliation when a new provider record arrives via webhook.
 3. **Idempotent provider ingestion** — the simulation workflows insert new records on every run; a real system would use provider transaction IDs as unique constraints to prevent duplicates.
 4. **Per-merchant scoring rules** — some merchants have higher fee variance or longer settlement windows; the scoring thresholds should be configurable per merchant.
@@ -314,7 +320,7 @@ These were considered but intentionally deferred to keep scope appropriate for t
 |---------|---------|
 | **Container orchestration** | Deploy the `api` and `web` Docker images to any container platform — Kubernetes, AWS ECS, Google Cloud Run, or Azure Container Apps |
 | **Database** | Replace the Docker PostgreSQL with a managed service (RDS, Cloud SQL, Azure Database for PostgreSQL) with automated backups and read replicas |
-| **Migrations** | Add Alembic for schema version control — run `alembic upgrade head` as an init container before the API starts |
+| **Migrations** | Add Alembic for schema version control — each schema change becomes a versioned migration script that can be applied (`alembic upgrade head`) or rolled back (`alembic downgrade`). Run as an init container before the API starts |
 | **Secrets** | Store `DATABASE_URL`, `ANTHROPIC_API_KEY`, and other secrets in a secrets manager (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, HashiCorp Vault) |
 | **Observability** | Add structured logging, metrics (Prometheus/OpenTelemetry), and distributed tracing |
 | **CI/CD** | Build and push Docker images on merge to main; deploy with a rolling update strategy |
@@ -345,5 +351,6 @@ This project was developed with **Claude Code** (Anthropic's CLI tool). Per the 
 - **Test suite** — pytest fixtures, mock session strategies, and Vitest component tests were developed iteratively with Claude Code.
 - **Debugging** — resolved issues including nested `.git` repository (Vite init), Docker `npm ci` lock file mismatch, and ruff `# noqa` inside triple-quoted strings.
 - **Documentation** — this README and the n8n workflow export instructions were written with Claude Code.
+- **CLAUDE.md** — the repository includes a `CLAUDE.md` file at the root, which provides project conventions, structure, and coding guidelines that Claude Code uses as context when assisting with development.
 
 All generated code was reviewed, understood, and validated before being committed.
