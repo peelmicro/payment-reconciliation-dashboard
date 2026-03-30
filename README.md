@@ -70,10 +70,70 @@ npm install
 npm run dev                      # http://localhost:5173
 ```
 
+### Populate data
+
+After starting the stack, the database is empty. First verify the API is running:
+
+```bash
+curl http://localhost:8000/health
+# Expected: {"status":"ok"}
+```
+
+Then populate data using one of these 4 options:
+
+#### Option A — One-command script (recommended)
+
+Requires `curl` installed (standard on macOS/Linux).
+
+```bash
+npm run initial-seed
+```
+
+This runs `scripts/initial-seed.sh` which sequentially: checks API health, seeds 3 currencies (USD, EUR, GBP), 3 providers (Stripe, PayPal, Bankinter), 3 merchants (2 Spain, 1 UK), generates 15 fake payments, simulates Stripe/PayPal/bank records, and runs the reconciliation engine.
+
+#### Option B — Manual curl commands
+
+```bash
+# 1. Seed reference data
+curl -X POST http://localhost:8000/seed/currencies
+curl -X POST http://localhost:8000/seed/providers
+curl -X POST http://localhost:8000/seed/merchants
+
+# 2. Generate internal payments (count=1..50, default 5)
+curl -X POST "http://localhost:8000/payments/generate?count=15"
+
+# 3. Simulate provider records
+curl -X POST http://localhost:8000/stripe-payments/simulate
+curl -X POST http://localhost:8000/paypal-payments/simulate
+curl -X POST http://localhost:8000/bank-payments/simulate
+
+# 4. Run reconciliation
+curl -X POST http://localhost:8000/reconciliations/run
+```
+
+#### Option C — Swagger UI
+
+1. Open http://localhost:8000/docs
+2. Execute each POST endpoint in order:
+   - `POST /seed/currencies` → `POST /seed/providers` → `POST /seed/merchants`
+   - `POST /payments/generate` (set `count` to 15)
+   - `POST /stripe-payments/simulate` → `POST /paypal-payments/simulate` → `POST /bank-payments/simulate`
+   - `POST /reconciliations/run`
+
+#### Option D — n8n workflows
+
+1. Open n8n at http://localhost:5678
+2. Import all 6 JSON files from `n8n/workflows/` (see [How to import workflows](#how-to-import-workflows) below)
+3. Execute manually in order: **WF1** (seed) → **WF2** (payments, run a few times) → **WF3** (Stripe) → **WF4** (PayPal) → **WF5** (bank) → **WF6** (reconciliation)
+4. **Publish** each workflow to activate its cron schedule for continuous data generation
+
+After populating, open http://localhost:3000 to see the dashboard with data.
+
 ### Convenience scripts (from repo root)
 
 | Command | What it does |
 |---------|-------------|
+| `npm run initial-seed` | Seed data, generate payments, simulate providers, and run reconciliation |
 | `npm run api` | Start FastAPI dev server |
 | `npm run web` | Start Vite dev server |
 | `npm run api:test` | Run pytest |

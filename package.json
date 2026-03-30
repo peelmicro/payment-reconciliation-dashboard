@@ -9,6 +9,7 @@
     "web": "cd apps/web && npm run dev",
     "web:test": "cd apps/web && npx vitest --run",
     "web:lint": "cd apps/web && npm run lint",
+    "initial-seed": "bash scripts/initial-seed.sh",
     "dc:up": "docker compose up -d",
     "dc:down": "docker compose down",
     "dc:ps": "docker compose ps",
