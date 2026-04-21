@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.enums import PaypalPaymentType
 from app.database import get_session
 from app.paypal.model import PaypalPayment
-from app.paypal.service import simulate_paypal_payments
+from app.paypal.service import (
+    simulate_orphan_paypal_payments,
+    simulate_paypal_payments,
+)
 
 router = APIRouter(prefix="/paypal-payments", tags=["paypal"])
 
@@ -78,5 +81,17 @@ async def simulate_paypal(session: AsyncSession = Depends(get_session)):
     created = await simulate_paypal_payments(session)
     return {
         "message": f"Simulated {len(created)} PayPal payments",
+        "payments": created,
+    }
+
+
+@router.post("/simulate-orphan")
+async def simulate_paypal_orphan(
+    count: int = Query(default=3, ge=1, le=20),
+    session: AsyncSession = Depends(get_session),
+):
+    created = await simulate_orphan_paypal_payments(session, count)
+    return {
+        "message": f"Simulated {len(created)} orphan PayPal payments",
         "payments": created,
     }

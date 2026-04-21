@@ -22,3 +22,8 @@ GET http://localhost:8000/stripe-payments?limit=10&offset=10
 ### Simulate Stripe payments (from recent internal payments)
 POST http://localhost:8000/stripe-payments/simulate
 Content-Type: application/json
+
+### Simulate orphan Stripe payments (no matching internal payment)
+### These produce `missing_internal` after reconciliation runs
+POST http://localhost:8000/stripe-payments/simulate-orphan?count=3
+Content-Type: application/json

@@ -3,7 +3,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bank.model import BankTransferPayment
-from app.bank.service import simulate_bank_payments
+from app.bank.service import (
+    simulate_bank_payments,
+    simulate_orphan_bank_payments,
+)
 from app.common.enums import BankTransferType
 from app.database import get_session
 
@@ -76,5 +79,17 @@ async def simulate_bank(session: AsyncSession = Depends(get_session)):
     created = await simulate_bank_payments(session)
     return {
         "message": f"Simulated {len(created)} bank transfer payments",
+        "payments": created,
+    }
+
+
+@router.post("/simulate-orphan")
+async def simulate_bank_orphan(
+    count: int = Query(default=3, ge=1, le=20),
+    session: AsyncSession = Depends(get_session),
+):
+    created = await simulate_orphan_bank_payments(session, count)
+    return {
+        "message": f"Simulated {len(created)} orphan bank transfer payments",
         "payments": created,
     }

@@ -22,3 +22,8 @@ GET http://localhost:8000/paypal-payments?limit=10&offset=10
 ### Simulate PayPal payments (from recent internal payments)
 POST http://localhost:8000/paypal-payments/simulate
 Content-Type: application/json
+
+### Simulate orphan PayPal payments (no matching internal payment)
+### These produce `missing_internal` after reconciliation runs
+POST http://localhost:8000/paypal-payments/simulate-orphan?count=3
+Content-Type: application/json

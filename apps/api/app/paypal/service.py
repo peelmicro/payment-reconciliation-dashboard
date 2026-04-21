@@ -126,3 +126,75 @@ async def simulate_paypal_payments(session: AsyncSession) -> list[dict]:
 
     await session.commit()
     return created
+
+
+async def simulate_orphan_paypal_payments(
+    session: AsyncSession, count: int = 3
+) -> list[dict]:
+    """
+    Generate PayPal records with NO matching internal payment (payment_id=None).
+    Simulates the real-world case where the provider has a record we never
+    received. These will appear as 'missing_internal' after reconciliation runs.
+    """
+
+    result = await session.execute(
+        select(Provider).where(Provider.code == "PAYPAL")
+    )
+    paypal_provider = result.scalar_one_or_none()
+    if paypal_provider is None:
+        return []
+
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    merchants = (await session.execute(select(Merchant))).scalars().all()
+    if not currencies or not merchants:
+        return []
+
+    created = []
+    for _ in range(count):
+        currency = random.choice(currencies)
+        merchant = random.choice(merchants)
+
+        amount = random.randint(1000, 20000)
+        paypal_fee = int(amount * 0.0349) + 49
+        paypal_net = amount - paypal_fee
+
+        paypal_created = datetime.now(timezone.utc) - timedelta(
+            minutes=random.randint(1, 600)
+        )
+
+        code = await generate_code(session, "PPL")
+
+        paypal_payment = PaypalPayment(
+            code=code,
+            payment_id=None,
+            provider_id=paypal_provider.id,
+            order_id=f"{fake.hexify('^^^^^^^^^^^^^^^^^^')}",
+            capture_id=f"{fake.hexify('^^^^^^^^^^^^^^^^^^')}",
+            payer_id=f"{fake.hexify('^^^^^^^^^^^^^^')}",
+            payment_type=PaypalPaymentType.capture,
+            status="COMPLETED",
+            amount=amount,
+            fee=paypal_fee,
+            net=paypal_net,
+            currency=currency.code,
+            refunded=0,
+            card_bin=None,
+            card_last4=None,
+            card_masked=None,
+            card_brand=None,
+            country=merchant.country,
+            vat_number=fake.numerify("ES#########"),
+            paypal_created_at=paypal_created,
+        )
+        session.add(paypal_payment)
+        created.append({
+            "code": code,
+            "order_id": paypal_payment.order_id,
+            "amount": amount,
+            "fee": paypal_fee,
+            "currency": currency.code,
+            "note": "orphan (no internal payment)",
+        })
+
+    await session.commit()
+    return created

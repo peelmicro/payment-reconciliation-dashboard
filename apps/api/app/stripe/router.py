@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.enums import StripePaymentType
 from app.database import get_session
 from app.stripe.model import StripePayment
-from app.stripe.service import simulate_stripe_payments
+from app.stripe.service import (
+    simulate_orphan_stripe_payments,
+    simulate_stripe_payments,
+)
 
 router = APIRouter(prefix="/stripe-payments", tags=["stripe"])
 
@@ -79,5 +82,17 @@ async def simulate_stripe(session: AsyncSession = Depends(get_session)):
     created = await simulate_stripe_payments(session)
     return {
         "message": f"Simulated {len(created)} Stripe payments",
+        "payments": created,
+    }
+
+
+@router.post("/simulate-orphan")
+async def simulate_stripe_orphan(
+    count: int = Query(default=3, ge=1, le=20),
+    session: AsyncSession = Depends(get_session),
+):
+    created = await simulate_orphan_stripe_payments(session, count)
+    return {
+        "message": f"Simulated {len(created)} orphan Stripe payments",
         "payments": created,
     }

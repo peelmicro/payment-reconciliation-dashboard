@@ -126,3 +126,77 @@ async def simulate_stripe_payments(session: AsyncSession) -> list[dict]:
 
     await session.commit()
     return created
+
+
+async def simulate_orphan_stripe_payments(
+    session: AsyncSession, count: int = 3
+) -> list[dict]:
+    """
+    Generate Stripe records with NO matching internal payment (payment_id=None).
+    Simulates the real-world case where the provider has a record we never
+    received (e.g., a lost webhook, or a fraud). These will appear as
+    'missing_internal' after reconciliation runs.
+    """
+
+    result = await session.execute(
+        select(Provider).where(Provider.code == "STRIPE")
+    )
+    stripe_provider = result.scalar_one_or_none()
+    if stripe_provider is None:
+        return []
+
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    merchants = (await session.execute(select(Merchant))).scalars().all()
+    if not currencies or not merchants:
+        return []
+
+    created = []
+    for _ in range(count):
+        currency = random.choice(currencies)
+        merchant = random.choice(merchants)
+
+        amount = random.randint(1000, 20000)
+        stripe_fee = int(amount * 0.029) + 30
+        stripe_net = amount - stripe_fee
+
+        stripe_created = datetime.now(timezone.utc) - timedelta(
+            minutes=random.randint(1, 600)
+        )
+
+        code = await generate_code(session, "STR")
+
+        stripe_payment = StripePayment(
+            code=code,
+            payment_id=None,
+            provider_id=stripe_provider.id,
+            payment_intent_id=f"pi_{fake.hexify('^^^^^^^^^^^^^^^^^^^^^^^^')}",
+            charge_id=f"ch_{fake.hexify('^^^^^^^^^^^^^^^^^^^^^^^^')}",
+            customer_id=f"cus_{fake.hexify('^^^^^^^^^^^^^^')}",
+            payment_type=StripePaymentType.payment_intent,
+            status="succeeded",
+            amount=amount,
+            fee=stripe_fee,
+            net=stripe_net,
+            currency=currency.code,
+            refunded=0,
+            card_bin=fake.numerify("######"),
+            card_last4=fake.numerify("####"),
+            card_masked=f"{fake.numerify('######')}******{fake.numerify('####')}",
+            card_brand=random.choice(["visa", "mastercard", "amex"]),
+            card_funding=random.choice(["credit", "debit", "prepaid"]),
+            country=merchant.country,
+            vat_number=fake.numerify("ES#########"),
+            stripe_created_at=stripe_created,
+        )
+        session.add(stripe_payment)
+        created.append({
+            "code": code,
+            "payment_intent_id": stripe_payment.payment_intent_id,
+            "amount": amount,
+            "fee": stripe_fee,
+            "currency": currency.code,
+            "note": "orphan (no internal payment)",
+        })
+
+    await session.commit()
+    return created

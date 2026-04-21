@@ -6,6 +6,13 @@ Built as a portfolio project demonstrating real-world fintech patterns: async Py
 
 ---
 
+## Demo
+
+![Demo](docs/demo.gif)
+*End-to-end flow: initial seed → dashboard → reconciliations list → scoring detail → trends chart → natural language query.*
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -89,7 +96,10 @@ Requires `curl` installed (standard on macOS/Linux).
 npm run initial-seed
 ```
 
-This runs `scripts/initial-seed.sh` which sequentially: checks API health, seeds 3 currencies (USD, EUR, GBP), 3 providers (Stripe, PayPal, Bankinter), 3 merchants (2 Spain, 1 UK), generates 15 fake payments, simulates Stripe/PayPal/bank records, and runs the reconciliation engine.
+This runs `scripts/initial-seed.sh` which sequentially: checks API health, seeds 3 currencies (USD, EUR, GBP), 3 providers (Stripe, PayPal, Bankinter), 3 merchants (2 Spain, 1 UK), generates 15 fake payments, simulates Stripe/PayPal/bank records, generates 2 orphan records per provider (to demonstrate the `missing_internal` status — see [Reconciliation statuses](#reconciliation-statuses)), and runs the reconciliation engine.
+
+![Initial seed](docs/initial-seed.png)
+*Terminal output of `npm run initial-seed` — 8 sequential API calls with progress.*
 
 #### Option B — Manual curl commands
 
@@ -107,7 +117,12 @@ curl -X POST http://localhost:8000/stripe-payments/simulate
 curl -X POST http://localhost:8000/paypal-payments/simulate
 curl -X POST http://localhost:8000/bank-payments/simulate
 
-# 4. Run reconciliation
+# 4. (Optional) Generate orphan provider records to demonstrate missing_internal
+curl -X POST "http://localhost:8000/stripe-payments/simulate-orphan?count=2"
+curl -X POST "http://localhost:8000/paypal-payments/simulate-orphan?count=2"
+curl -X POST "http://localhost:8000/bank-payments/simulate-orphan?count=2"
+
+# 5. Run reconciliation
 curl -X POST http://localhost:8000/reconciliations/run
 ```
 
@@ -120,14 +135,20 @@ curl -X POST http://localhost:8000/reconciliations/run
    - `POST /stripe-payments/simulate` → `POST /paypal-payments/simulate` → `POST /bank-payments/simulate`
    - `POST /reconciliations/run`
 
+![Swagger UI](docs/swagger.png)
+*Swagger UI at `http://localhost:8000/docs` — all endpoints grouped by tag (seed, payments, stripe, paypal, bank, reconciliation, ask).*
+
 #### Option D — n8n workflows
 
 1. Open n8n at http://localhost:5678
-2. Import all 6 JSON files from `n8n/workflows/` (see [How to import workflows](#how-to-import-workflows) below)
-3. Execute manually in order: **WF1** (seed) → **WF2** (payments, run a few times) → **WF3** (Stripe) → **WF4** (PayPal) → **WF5** (bank) → **WF6** (reconciliation)
-4. **Publish** each workflow to activate its cron schedule for continuous data generation
+2. Import all 7 JSON files from `n8n/workflows/` (see [How to import workflows](#how-to-import-workflows) below)
+3. Execute manually in order: **WF1** (seed) → **WF2** (payments, run a few times) → **WF3** (Stripe) → **WF4** (PayPal) → **WF5** (bank) → **WF7** (optional — orphan records for `missing_internal`) → **WF6** (reconciliation)
+4. **Publish** WF2–WF6 to activate their cron schedules for continuous data generation (WF7 stays manual — orphans are incidents, not a periodic flow)
 
 After populating, open http://localhost:3000 to see the dashboard with data.
+
+![Dashboard home](docs/home.png)
+*Dashboard home — match rate, total reconciled, status breakdown by type, provider distribution, and daily trends.*
 
 ### Convenience scripts (from repo root)
 
@@ -176,6 +197,9 @@ The `max_possible_score` is calculated **dynamically** — a criterion is only a
 
 Both are equally strong matches despite having different field sets.
 
+![Scoring example](docs/scoring-example.png)
+*Reconciliation detail — shows `Score: X / max_score` and computed `Confidence %` alongside the matching provider and internal records.*
+
 ### Reconciliation statuses
 
 | Status | Meaning |
@@ -187,6 +211,30 @@ Both are equally strong matches despite having different field sets.
 | `missing_external` | We have a record; provider doesn't (yet) |
 | `duplicate` | Multiple internal records above threshold |
 | `disputed` | Manually flagged for review |
+
+> **Demo tip — how to generate `missing_internal` and `missing_external`:**
+>
+> - **`missing_internal`** requires a provider record with no matching internal payment. Use the orphan simulation endpoints: `POST /stripe-payments/simulate-orphan?count=N`, `POST /paypal-payments/simulate-orphan?count=N`, `POST /bank-payments/simulate-orphan?count=N`. The `npm run initial-seed` script generates 2 orphans per provider automatically.
+> - **`missing_external`** requires an internal payment with no matching provider record. Run `POST /payments/generate` then `POST /reconciliations/run` **without** calling the simulate endpoints first.
+
+### Dashboard pages
+
+The frontend exposes four views, all populated from the same API endpoints:
+
+![Transactions](docs/transactions.png)
+*Transactions page — internal payments with filters for status, provider, and method.*
+
+![Reconciliations list](docs/reconciliations-list.png)
+*Reconciliations list — paginated grid with status filter, confidence column, and click-through to detail.*
+
+![Reconciliation detail](docs/reconciliation-detail.png)
+*Reconciliation detail — internal vs external record, delta, and scoring breakdown.*
+
+![Missing external](docs/missing-external.png)
+*Missing external — internal payments that have no matching provider record yet.*
+
+![Trends](docs/trends.png)
+*Daily reconciliation trends — stacked bar chart across N days (Recharts), aggregated by Pandas on the API side.*
 
 ---
 
@@ -202,6 +250,13 @@ All workflows are exported as JSON files in `n8n/workflows/` and can be imported
 | WF4 | `WF4_simulate_paypal.json` | Every 30 min | Simulates PayPal records from recent card/wallet payments |
 | WF5 | `WF5_simulate_bank.json` | Every 1 hour | Simulates bank transfer records from recent bank payments |
 | WF6 | `WF6_run_reconciliation.json` | Every 15 min | Runs the reconciliation engine |
+| WF7 | `WF7_simulate_orphans.json` | Manual | Generates 2 orphan records per provider (Stripe, PayPal, bank) — demonstrates `missing_internal` status |
+
+![n8n workflows](docs/n8n-workflows.png)
+*n8n workflow list — 7 imported workflows; cron-scheduled ones are toggled Active, WF1 and WF7 stay manual.*
+
+![n8n execution](docs/n8n-execution.png)
+*Successful execution of WF6 (reconciliation) — each HTTP node shows its response payload for inspection.*
 
 ### How to import workflows
 
@@ -234,13 +289,26 @@ The endpoint uses a two-step LangChain chain:
 1. Generate SQL from the question (Claude reads the schema)
 2. Execute the SQL, then generate a natural language answer from the results
 
+![Ask AI](docs/ask-ai.png)
+*Ask AI page — natural language question → generated SQL → natural language answer.*
+
 ---
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/` | Health check |
+| GET | `/health` | Health check |
+| POST | `/seed/currencies` | Seed currencies (USD, EUR, GBP) |
+| POST | `/seed/providers` | Seed providers (Stripe, PayPal, Bankinter) |
+| POST | `/seed/merchants` | Seed merchants (2 Spain, 1 UK) |
+| POST | `/payments/generate` | Generate fake internal payments (`count` 1–50, default 5) |
+| POST | `/stripe-payments/simulate` | Simulate Stripe records from recent card payments |
+| POST | `/stripe-payments/simulate-orphan` | Generate orphan Stripe records (no internal payment) — produces `missing_internal` |
+| POST | `/paypal-payments/simulate` | Simulate PayPal records from recent card/wallet payments |
+| POST | `/paypal-payments/simulate-orphan` | Generate orphan PayPal records (no internal payment) — produces `missing_internal` |
+| POST | `/bank-payments/simulate` | Simulate bank transfer records from recent bank payments |
+| POST | `/bank-payments/simulate-orphan` | Generate orphan bank records (no internal payment) — produces `missing_internal` |
 | GET | `/reconciliations` | List reconciliations (paginated, filterable by status) |
 | GET | `/reconciliations/summary` | Dashboard KPIs: match rate, totals, confidence stats |
 | GET | `/reconciliations/trends` | Daily trends over N days (Pandas aggregation) |
@@ -248,7 +316,6 @@ The endpoint uses a two-step LangChain chain:
 | GET | `/reconciliations/{id}` | Single reconciliation detail |
 | POST | `/reconciliations/run` | Trigger reconciliation engine manually |
 | POST | `/ask` | Natural language query |
-| POST | `/seed` | Seed base reference data |
 | GET | `/docs` | Swagger UI |
 
 `.http` files for VS Code REST Client are in `apps/api/http/`.

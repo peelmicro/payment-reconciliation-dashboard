@@ -44,7 +44,20 @@ echo "     Simulating bank transfer payments..."
 curl -sf -X POST "$API_URL/bank-payments/simulate" > /dev/null
 echo "     OK"
 
-# 5. Run reconciliation
+# 5. Simulate orphan records (to demonstrate missing_internal status)
+echo "     Simulating 2 orphan Stripe records..."
+curl -sf -X POST "$API_URL/stripe-payments/simulate-orphan?count=2" > /dev/null
+echo "     OK"
+
+echo "     Simulating 2 orphan PayPal records..."
+curl -sf -X POST "$API_URL/paypal-payments/simulate-orphan?count=2" > /dev/null
+echo "     OK"
+
+echo "     Simulating 2 orphan bank transfer records..."
+curl -sf -X POST "$API_URL/bank-payments/simulate-orphan?count=2" > /dev/null
+echo "     OK"
+
+# 6. Run reconciliation
 echo "8/8  Running reconciliation engine..."
 curl -sf -X POST "$API_URL/reconciliations/run" > /dev/null
 echo "     OK"

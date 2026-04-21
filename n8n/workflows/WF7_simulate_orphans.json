@@ -1,0 +1,114 @@
+{
+  "name": "WF7 - Simulate Orphan Provider Records",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/stripe-payments/simulate-orphan",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "count",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-1",
+      "name": "Orphan Stripe Records",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/paypal-payments/simulate-orphan",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "count",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-2",
+      "name": "Orphan PayPal Records",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/bank-payments/simulate-orphan",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "count",
+              "value": "2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-3",
+      "name": "Orphan Bank Records",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Orphan Stripe Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orphan Stripe Records": {
+      "main": [
+        [
+          {
+            "node": "Orphan PayPal Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orphan PayPal Records": {
+      "main": [
+        [
+          {
+            "node": "Orphan Bank Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

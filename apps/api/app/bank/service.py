@@ -1,9 +1,12 @@
 import random
 from datetime import datetime, timedelta, timezone
 
+from faker import Faker
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
+
+fake = Faker()
 
 from app.bank.model import BankTransferPayment
 from app.common.code_generator import generate_code
@@ -134,6 +137,84 @@ async def simulate_bank_payments(session: AsyncSession) -> list[dict]:
             "transfer_type": transfer_type.value,
             "value_date": value_date.isoformat(),
             "currency": currency.code,
+        })
+
+    await session.commit()
+    return created
+
+
+async def simulate_orphan_bank_payments(
+    session: AsyncSession, count: int = 3
+) -> list[dict]:
+    """
+    Generate bank transfer records with NO matching internal payment
+    (payment_id=None). Simulates a real-world case where the bank has
+    a transaction we never received (e.g., ingestion failure). These
+    will appear as 'missing_internal' after reconciliation runs.
+    """
+
+    result = await session.execute(
+        select(Provider).where(Provider.code == "BANKINTER")
+    )
+    bank_provider = result.scalar_one_or_none()
+    if bank_provider is None:
+        return []
+
+    currencies = (await session.execute(select(Currency))).scalars().all()
+    merchants = (await session.execute(select(Merchant))).scalars().all()
+    if not currencies or not merchants:
+        return []
+
+    created = []
+    for _ in range(count):
+        currency = random.choice(currencies)
+        merchant = random.choice(merchants)
+
+        amount = random.randint(5000, 50000)
+
+        transfer_type = random.choice([
+            BankTransferType.sepa_credit,
+            BankTransferType.swift,
+            BankTransferType.domestic,
+        ])
+
+        iban_country = merchant.country or "ES"
+        iban_bank = fake.numerify("####")
+        iban_branch = fake.numerify("####")
+        iban_last_four = fake.numerify("####")
+        iban_masked = f"{iban_country}**{iban_bank}****{iban_branch}****{iban_last_four}"  # noqa: E501
+
+        now = datetime.now(timezone.utc)
+        bank_created = now - timedelta(minutes=random.randint(1, 600))
+        value_date = (bank_created + timedelta(days=random.randint(1, 3))).date()
+
+        code = await generate_code(session, "BNK")
+
+        bank_payment = BankTransferPayment(
+            code=code,
+            payment_id=None,
+            provider_id=bank_provider.id,
+            payment_type=transfer_type,
+            status="EXECUTED",
+            vat_number=fake.numerify("ES#########"),
+            amount=amount,
+            currency=currency.code,
+            iban_country=iban_country,
+            iban_bank=iban_bank,
+            iban_branch=iban_branch,
+            iban_last_four=iban_last_four,
+            iban_masked=iban_masked,
+            value_date=value_date,
+            bank_created_at=bank_created,
+        )
+        session.add(bank_payment)
+        created.append({
+            "code": code,
+            "amount": amount,
+            "transfer_type": transfer_type.value,
+            "value_date": value_date.isoformat(),
+            "currency": currency.code,
+            "note": "orphan (no internal payment)",
         })
 
     await session.commit()

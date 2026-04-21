@@ -25,3 +25,8 @@ GET http://localhost:8000/bank-payments?limit=10&offset=10
 ### Simulate bank transfer payments (from recent internal payments)
 POST http://localhost:8000/bank-payments/simulate
 Content-Type: application/json
+
+### Simulate orphan bank transfer payments (no matching internal payment)
+### These produce `missing_internal` after reconciliation runs
+POST http://localhost:8000/bank-payments/simulate-orphan?count=3
+Content-Type: application/json
